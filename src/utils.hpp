@@ -14,8 +14,8 @@
 #include <tlhelp32.h>
 #include <stdexcept>
 #include <iostream>
+#include <string>
 
-
-
+std::string get_last_error_message();
 
 #endif // UTILS_HPP_

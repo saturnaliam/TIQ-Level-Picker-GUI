@@ -8,7 +8,7 @@ int main(void) {
   
   try {
     game = std::unique_ptr<TIQ>(new TIQ(L"Adobe Flash Player 32"));
-    std::cout << game->PID;
+    game->enable_hook();
   } catch (std::exception &e) {
     std::cout << e.what() << "\n";
     return 1;
