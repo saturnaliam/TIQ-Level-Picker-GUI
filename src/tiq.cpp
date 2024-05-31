@@ -6,9 +6,14 @@ TIQ::TIQ(const wchar_t *window_name) {
     this->get_process_handle();
     this->get_module_base(window_name);
     this->get_hook_address();
+    this->get_level_address();
   } catch (std::runtime_error &e) {
     throw e;
   }
+}
+
+TIQ::~TIQ() {
+  this->disable_hook();
 }
 
 void TIQ::get_module_base(const wchar_t *module_name) {
@@ -78,7 +83,6 @@ void TIQ::get_hook_address() {
       }
 
       if (j + 1 == sizeof(this->old_bytes)) {
-        printf("pattern found at address: 0x%lx\n", i + (DWORD)this->base_address);
         this->hook_address = (DWORD)this->base_address + i;
         goto end;
       }
@@ -90,8 +94,38 @@ end:
   free(buffer);
 }
 
-void TIQ::enable_hook() {
+void TIQ::enable_hook(unsigned int level) {
+  this->hook_bytes[3] = level;
+
   if (WriteProcessMemory(this->process_handle, reinterpret_cast<LPVOID>(this->hook_address), this->hook_bytes, sizeof(this->hook_bytes), NULL) == 0) {
     throw std::runtime_error(get_last_error_message());
   }
+}
+
+void TIQ::disable_hook() {
+  if (WriteProcessMemory(this->process_handle, reinterpret_cast<LPVOID>(this->hook_address), this->old_bytes, sizeof(this->old_bytes), NULL) == 0) {
+    throw std::runtime_error(get_last_error_message());
+  }
+}
+
+void TIQ::get_level_address() {
+  constexpr int offsets[7] = { 0xC95B64, 0x24, 0xA8C, 0x4, 0x2C, 0x50, 0x264 };
+
+  DWORD64 temp = this->base_address;
+  for (int i = 0; i < 7; i++) {
+    temp += offsets[i];
+    ReadProcessMemory(this->process_handle, (LPVOID)temp, &temp, sizeof(int), NULL);
+  }
+
+  this->level_address = temp + 0x4C;
+}
+
+unsigned int TIQ::get_current_level() {
+  unsigned int level;
+  ReadProcessMemory(this->process_handle, (LPVOID)(this->level_address), &level, sizeof(level), NULL);
+  return level;
+}
+
+unsigned int TIQ::map_to_scene(unsigned int level) {
+  return scene_map[level - 1];
 }

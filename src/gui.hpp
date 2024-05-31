@@ -2,14 +2,16 @@
 #define GUI_HPP_
 
 #include <d3d9.h>
+#include <memory>
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx9.h"
 #include "imgui/imgui_impl_win32.h"
 #include "utils.hpp"
+#include "tiq.hpp"
 
 namespace gui {
-  constexpr int width = 500;
-  constexpr int height = 300;
+  constexpr int width = 300;
+  constexpr int height = 200;
 
   inline bool exit = true;
 
@@ -36,7 +38,7 @@ namespace gui {
 
   void BeginRender() noexcept;
   void EndRender() noexcept;
-  void Render() noexcept;
+  std::unique_ptr<TIQ> Render(std::unique_ptr<TIQ> tiq) noexcept;
 };
 
 #endif // GUI_HPP_

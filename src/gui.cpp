@@ -3,7 +3,6 @@
 
 #include "gui.hpp"
 
-
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND window, UINT message, WPARAM wideParameter, LPARAM longParameter);
 
 long long __stdcall WindowProcess(HWND window, UINT message, WPARAM wideParameter, LPARAM longParameter) {
@@ -130,7 +129,7 @@ void gui::CreateImGui() noexcept {
 
   io.IniFilename = NULL;
 
-  ImGui::StyleColorsDark();
+  ImGui::StyleColorsClassic();
 
   ImGui_ImplWin32_Init(window);
   ImGui_ImplDX9_Init(device);
@@ -174,14 +173,37 @@ void gui::EndRender() noexcept {
   if (result == D3DERR_DEVICELOST && device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) ResetDevice();
 }
 
-void gui::Render() noexcept {
+std::unique_ptr<TIQ> gui::Render(std::unique_ptr<TIQ> tiq) noexcept {
   ImGui::SetNextWindowPos({ 0, 0 });
   ImGui::SetNextWindowSize({ width, height });
   ImGui::Begin(
-    "yo",
+    "Level Chooser",
     &exit,
     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
 
-  ImGui::Button("hi");
+  static unsigned int level = 1;
+  static bool level_chosen = false;
+  static unsigned int intended_level = 1;
+  constexpr unsigned int level_min = 1;
+  constexpr unsigned int level_max = 100;
+
+  ImGui::Text("Created by Lucia C (saturnalia)");
+
+  ImGui::DragScalar("Level", ImGuiDataType_U16, &level, 1, &level_min, &level_max);
+  bool clicked = ImGui::Button("Hook");  
+
+  if (clicked) {
+    intended_level = level;
+    level_chosen = true;
+    tiq->enable_hook(tiq->map_to_scene(level));
+  }
+
+  if (tiq->get_current_level() == tiq->map_to_scene(intended_level) && level_chosen) {
+    tiq->disable_hook();
+    level_chosen = false;
+  }
+  
   ImGui::End();
+
+  return tiq;
 }
