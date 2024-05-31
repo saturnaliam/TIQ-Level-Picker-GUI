@@ -1,16 +1,29 @@
 #define WIN32_LEAN_AND_MEAN
-#include "tiq.hpp"
 #include <iostream>
 #include <memory>
+#include <thread>
 
-int main(void) {
-  std::unique_ptr<TIQ> game = nullptr;
-  
-  try {
-    game = std::unique_ptr<TIQ>(new TIQ(L"Adobe Flash Player 32"));
-    game->enable_hook();
-  } catch (std::exception &e) {
-    std::cout << e.what() << "\n";
-    return 1;
+#include "tiq.hpp"
+#include "gui.hpp"
+
+constexpr unsigned int sleep_time = 10;
+
+int __stdcall wWinMain(HINSTANCE instance, HINSTANCE previousInstance, PWSTR arguments, int commandShow) {
+  gui::CreateHWindow("hi", "ballin");
+  gui::CreateDevice();
+  gui::CreateImGui();
+
+  while (gui::exit) {
+    gui::BeginRender();
+    gui::Render();
+    gui::EndRender();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
   }
+
+  gui::DestroyImGui();
+  gui::DestroyDevice();
+  gui::DestroyHWindow();
+
+  return 0;
 }
