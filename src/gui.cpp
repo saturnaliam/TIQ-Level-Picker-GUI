@@ -182,23 +182,32 @@ std::unique_ptr<TIQ> gui::Render(std::unique_ptr<TIQ> tiq) noexcept {
     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
 
   static unsigned int level = 1;
+  static unsigned int current_level;
   static bool level_chosen = false;
-  static unsigned int intended_level = 1;
   constexpr unsigned int level_min = 1;
   constexpr unsigned int level_max = 100;
 
   ImGui::Text("Created by Lucia C (saturnalia)");
 
-  ImGui::DragScalar("Level", ImGuiDataType_U16, &level, 1, &level_min, &level_max);
-  bool clicked = ImGui::Button("Hook");  
+  if (tiq->get_current_level() == 0) ImGui::BeginDisabled();
 
-  if (clicked) {
-    intended_level = level;
+  ImGui::DragScalar("Level", ImGuiDataType_U16, &level, 1, &level_min, &level_max);
+  bool clicked = ImGui::Button("Go to level");
+  bool unhook = ImGui::Button("Unhook");
+  ImGui::SetItemTooltip("If your game freezes, locks up, or\notherwise seems to be acting\nweird, press this button.");
+  if (tiq->get_current_level() == 0) ImGui::EndDisabled();
+
+  if (clicked && level <= 100 && level >= 1) {
+    current_level = tiq->get_current_level();
     level_chosen = true;
     tiq->enable_hook(tiq->map_to_scene(level));
   }
 
-  if (tiq->get_current_level() == tiq->map_to_scene(intended_level) && level_chosen) {
+  if (unhook) {
+    tiq->disable_hook();
+  }
+
+  if (tiq->get_current_level() != current_level && level_chosen) {
     tiq->disable_hook();
     level_chosen = false;
   }
